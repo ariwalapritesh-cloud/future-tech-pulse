@@ -11,7 +11,12 @@ from pathlib import Path
 from typing import List, Dict, Any
 import static_ffmpeg
 
+# Ensure ffmpeg binary is downloaded and added to PATH
 static_ffmpeg.add_paths()
+
+# Get the exact ffmpeg binary path for reliable cross-platform usage
+_ffmpeg_bins, _ = static_ffmpeg.run.get_or_fetch_platform_executables_else_raise()
+FFMPEG_BIN = str(_ffmpeg_bins)
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -70,7 +75,7 @@ class VideoBuilder:
                 )
 
                 cmd = [
-                    "ffmpeg", "-y",
+                    FFMPEG_BIN, "-y",
                     "-i", str(img_file),
                     "-vf", filter_complex,
                     "-c:v", "libx264",
@@ -80,21 +85,21 @@ class VideoBuilder:
                     str(clip_out)
                 ]
                 
-                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
                 scene_clip_paths.append(clip_out)
                 f_concat.write(f"file '{clip_out.name}'\n")
 
         # Step 2: Concatenate visual clips
         raw_concat_video = temp_dir / "raw_visuals.mp4"
         concat_cmd = [
-            "ffmpeg", "-y",
+            FFMPEG_BIN, "-y",
             "-f", "concat",
             "-safe", "0",
             "-i", str(concat_list_path),
             "-c", "copy",
             str(raw_concat_video)
         ]
-        subprocess.run(concat_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(concat_cmd, check=True, stdout=subprocess.DEVNULL)
 
         # Step 3: Mix voiceover + background music + dynamic subtitles
         if sys.platform == "win32":
@@ -103,7 +108,7 @@ class VideoBuilder:
             ass_path_escaped = str(subtitles_ass_path.resolve()).replace(":", "\\:")
         
         final_cmd = [
-            "ffmpeg", "-y",
+            FFMPEG_BIN, "-y",
             "-i", str(raw_concat_video),
             "-i", str(voice_audio_path),
             "-i", str(music_audio_path),
