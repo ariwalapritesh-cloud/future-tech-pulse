@@ -1,0 +1,51 @@
+name: Automated Viral Shorts
+
+# Trigger on schedule (default: twice daily) and manual dispatch
+on:
+  schedule:
+    - cron: "30 7,13 * * *"   # 12:30 PM and 6:30 PM IST (UTC+5:30)
+  workflow_dispatch: {}
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install UV (optional fast installer)
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Create virtual environment and install dependencies
+        run: |
+          uv venv
+          . .venv/bin/activate
+          uv pip install -r requirements.txt
+
+      - name: Decode YouTube secrets
+        env:
+          YT_CLIENT_SECRET_B64: ${{ secrets.YT_CLIENT_SECRET_B64 }}
+          YT_TOKEN_PICKLE_B64: ${{ secrets.YT_TOKEN_PICKLE_B64 }}
+        run: |
+          echo "$YT_CLIENT_SECRET_B64" | base64 -d > config/client_secret.json
+          echo "$YT_TOKEN_PICKLE_B64" | base64 -d > config/youtube_token.pickle
+
+      - name: Run full pipeline (or upload only)
+        run: |
+          . .venv/bin/activate
+          # Full end-to-end generation and publishing
+          python run_studio.py
+          # If you only need to upload an existing video, replace the above with:
+          # python publish_to_youtube.py
+
+      - name: Cleanup secrets from runner
+        if: always()
+        run: |
+          rm -f config/client_secret.json config/youtube_token.pickle
