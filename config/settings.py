@@ -1,4 +1,4 @@
-﻿import os
+import os
 from pathlib import Path
 
 # Base Paths
@@ -31,7 +31,7 @@ THREADS_USER_ID = os.getenv("THREADS_USER_ID", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # Output File Paths
-FINAL_VIDEO_PATH = OUTPUT_DIR / "viral_shorts_superintelligence.mp4"
 FINAL_AUDIO_PATH = AUDIO_DIR / "voiceover.mp3"
 SUBTITLE_PATH = OUTPUT_DIR / "subtitles.ass"
 METADATA_PATH = OUTPUT_DIR / "metadata.json"
+

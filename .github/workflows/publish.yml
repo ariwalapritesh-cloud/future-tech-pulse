@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,12 +40,21 @@ jobs:
           echo "$YT_TOKEN_PICKLE_B64" | base64 -d > config/youtube_token.pickle
 
       - name: Run full pipeline (or upload only)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           . .venv/bin/activate
           # Full end-to-end generation and publishing
           python run_studio.py
           # If you only need to upload an existing video, replace the above with:
           # python publish_to_youtube.py
+
+      - name: Commit history log back to repository
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add publish_history.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update publish history [skip ci]" && git push)
 
       - name: Cleanup secrets from runner
         if: always()
