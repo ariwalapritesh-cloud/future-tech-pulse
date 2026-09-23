@@ -51,7 +51,7 @@ class TrendScout:
         logger.info(f"Querying Gemini for a new unique trend... (Excluding past topics: {len(past_topics or [])})")
         
         response = self.client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
