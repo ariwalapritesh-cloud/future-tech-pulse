@@ -1,0 +1,34 @@
+
+name: Test Gemini Connection
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-gemini:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Test topic generation
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python - <<'PY'
+          from src.trend_scout import TrendScout
+
+          trend = TrendScout().select_top_trend(
+              past_topics=["Artificial Intelligence"]
+          )
+          print("Gemini connection successful")
+          print("Generated topic:", trend.title)
+          PY
